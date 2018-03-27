@@ -1,0 +1,32 @@
+@charset "utf-8";
+/**
+ * Created by fwxing on 2018/3/20 9:49
+ */
+
+/*公共样式*/
+a,h1,h2,h3,img,body,html,ul,li,input,p{
+  margin: 0;
+  padding: 0;
+}
+img,input {
+  border:0
+}
+img{
+  vertical-align: middle;
+}
+.clearfix{
+  @include clearfix();
+}
+
+.fl {
+  float:left;
+}
+.fr {
+  float:right;
+}
+li {
+  list-style: none;
+}
+a{
+  text-decoration: none;
+}
