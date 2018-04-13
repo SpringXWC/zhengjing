@@ -5,18 +5,22 @@ import App from './App'
 import router from './router'
 import axios from 'axios'
 import Mint from 'mint-ui'
-import './assets/common/css/base.scss'
 import '../rem/rem'
+import 'mint-ui/lib/style.css'
+import './assets/font/iconfont.css'
+import './assets/common/css/base.scss'
+import '../node_modules/mint-ui/lib/style.css'
 
 
 Vue.use(Mint);
 Vue.prototype.$http = axios
-//Vue.config.productionTip = false
+Vue.config.productionTip = false
 
-/* eslint-disable no-new */
-new Vue({
+window.APP = new Vue({
   el: '#app',
   router,
   components: { App },
   template: '<App/>'
 })
+//是否后退
+APP.isBack = false

@@ -19,18 +19,17 @@
 <style scoped lang="scss">
   .list{
     position: relative;
-    height:0.7rem;
-    line-height: 0.7rem;
-
-    margin-bottom:0.3rem;
-    background-color:#1f87c6;
+    height:1rem;
+    line-height: 1rem;
+    margin-bottom:0.2rem;
+    background-color:#fff;
 
     .listTitle{
       /*float:left;*/
       position: absolute;
       left:0.2rem;
-      color:#000;
-      font-size:0.16rem;
+      color:$txtColor;
+      font-size:0.3rem;
     }
     /*.is-right{*/
       /*!*float:right;*!*/

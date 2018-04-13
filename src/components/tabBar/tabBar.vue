@@ -4,29 +4,21 @@
   </div>
 </template>
 <script>
-  export default{
-    props:['value']
+  export default {
+    props: ['value']
   }
 </script>
 <style lang="scss">
-  .tabbar{
-    display:flex;
-    flex-direction:row;
+  .tabbar {
+    display: flex;
+    align-items: center;
+    width: 100%;
     position: fixed;
     bottom: 0;
-    width: 100%;
-    height:0.98rem;
+    height: 1.18rem;
     overflow: hidden;
-    background-color: #f6f6f6;
+    background-color: #fff;
+    z-index: 9;
+  }
 
-  }
-  .tabbar::before{
-    content:"";
-    display: block;
-    position:absolute;
-    left:0;
-    top:0;
-    width: 100%;
-    border-top:0.01rem solid #999;
-  }
 </style>

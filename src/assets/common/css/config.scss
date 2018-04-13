@@ -5,21 +5,23 @@
 //1rem = 100px
 $pxToRemScale: 100;
 //主色调
-$mainColor: #333;
+$mainColor: #83C582;
 
 //字体颜色
-$txtColor: blue;
-
-// 整体默认颜色
-$defaultColor: #1f87c6;
+$txtColor: #203736;       //默认字体颜色
+$txtColorLight: #B4B5B5;  //次要文字
+$txtColorPrimary: #83C582;
+$txtWarn: #F6C262;        //警告文字
 // 背景颜色
-$backgroundColor: #f0f0f0;
+$backgroundColor: #F5FAF5;
 
+
+//清除浮动
 @mixin clearfix() {
   &::before,
   &:after {
-    content: "";
-    display: block;
+    content: " ";
+    display: table;
     height: 0;
     line-height: 0;
     visibility: hidden;
@@ -27,6 +29,20 @@ $backgroundColor: #f0f0f0;
   }
   & {
     zoom: 1
+  }
+}
+
+//单行溢出省略号
+@mixin ellipsis() {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin borderbox() {
+  box-sizing: border-box;
+  * {
+    box-sizing: inherit;
   }
 }
 
@@ -56,6 +72,7 @@ $backgroundColor: #f0f0f0;
   #{$property}: $remValues;
 }
 
+//背景图高分屏处理
 @mixin bg-image($url) {
   background-image: url($url + "@2x.png");
   background-repeat: no-repeat;
