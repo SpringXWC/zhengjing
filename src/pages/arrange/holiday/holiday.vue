@@ -8,12 +8,12 @@
     <div>
       <div class="ui-cell groove-padd-md" :class="{'text-primary': visible1}" @click="open('picker1')">
         <span>开始时间</span>
-        <span v-if="startTime">{{startTime | dateTime}}</span>
+        <span v-if="sTime">{{sTime | dateTime}}</span>
         <span v-else class="text-minor">请选择</span>
       </div>
       <div class="ui-cell groove-padd-md" :class="{'text-primary': visible2}" @click="open('picker2')">
         <span>结束时间</span>
-        <span v-if="endTime">{{endTime | dateTime}}</span>
+        <span v-if="eTime">{{eTime | dateTime}}</span>
         <span v-else class="text-minor">请选择</span>
       </div>
     </div>
@@ -23,13 +23,15 @@
       <p>2.紧急情况临时请假请联系人事部</p>
     </div>
     <div class="groove-padd-md fixed-bottom">
-      <mt-button type="primary" class="ui-btn-success" size="large" @click.native="submit">
+      <mt-button type="primary" class="ui-btn-success" :disabled="loading" size="large" @click.native="submit">
+        <mt-spinner v-show="loading" :type="3" :size="24" color="#fff" class="spinner"></mt-spinner>
         提交申请
       </mt-button>
     </div>
     <mt-datetime-picker
       ref="picker1"
-      v-model="startTime"
+      v-model="startTimeStart"
+      :startDate="new Date()"
       :closeOnClickModal="false"
       year-format="{value} 年"
       month-format="{value} 月"
@@ -41,15 +43,16 @@
     </mt-datetime-picker>
     <mt-datetime-picker
       ref="picker2"
-      v-model="endTime"
+      v-model="endTimeStart"
       :closeOnClickModal="false"
-      :startDate="startTime"
+      :startDate="sTime || new Date()"
       year-format="{value} 年"
       month-format="{value} 月"
       date-format="{value} 日"
       hour-format="{value} 时"
       minute-format="{value} 分"
       @visible-change="handleVisibleChange"
+      @confirm="handleChange"
     >
     </mt-datetime-picker>
   </div>
@@ -67,10 +70,13 @@
     },
     data() {
       return {
-        startTime: new Date(),
-        endTime: null,
+        startTimeStart: new Date(),
+        sTime: null,
+        endTimeStart: null,
+        eTime: null,
         visible1: false,
         visible2: false,
+        loading: false
       }
     },
     filters: {
@@ -79,33 +85,58 @@
       }
     },
     methods: {
+      //打开时间选择器
       open(picker) {
         if (picker === 'picker1') {
           this.visible1 = true
+          this.startTimeStart = this.sTime || new Date()
+
         } else if (picker === 'picker2') {
           this.visible2 = true
+          this.endTimeStart = this.eTime || this.sTime || new Date()
         }
         this.$refs[picker].open();
       },
+      //时间选择器确认
       handleChange(value) {
         if (this.visible1) {
-          this.startTime = value
+          this.sTime = value
+          if (this.eTime && this.sTime > this.eTime) {
+            this.eTime = null
+          }
+          this.endTimeStart = this.sTime
         }
         if (this.visible2) {
-          this.endTime = value
+          this.eTime = value
         }
       },
       handleVisibleChange(isVisible) {
-        if(!isVisible){
+        if (!isVisible) {
           this.visible1 = false
           this.visible2 = false
         }
       },
       //验证
       validate() {
-        if (!this.startTime) {
+        if (!this.sTime) {
           Toast({
-            message: '请选择时间',
+            message: '请开始选择时间',
+            position: 'center',
+            duration: 3000
+          });
+          return false
+        }
+        if (!this.eTime) {
+          Toast({
+            message: '请结束选择时间',
+            position: 'center',
+            duration: 3000
+          });
+          return false
+        }
+        if (this.eTime.valueOf() <= this.sTime.valueOf()) {
+          Toast({
+            message: '结束时间应小于开始时间',
             position: 'center',
             duration: 3000
           });
@@ -116,14 +147,28 @@
       //提交申请
       submit() {
         if (this.validate()) {
-          /*this.$http.post('/', {
-            params: {
-              time1: this.startTime,
-              time2: this.endTime
+          let req = new this.RequestObject({
+            begin: this.sTime.valueOf(),
+            end: this.eTime.valueOf(),
+            DateType: "-1"
+          })
+          this.loading = true
+          this.$http.post(this.state.BaseData.origin + "/504", req.reqData).then((res) => {
+            req.handleException(res.data)
+            this.loading = false
+            if (res.data.Basis.Status === 200) {
+              Toast({
+                message: res.data.Basis.Msg,
+                position: 'center',
+                duration: 2000
+              });
+              setTimeout(() => {
+                this.$router.go(-1)
+              }, 3000)
             }
-          }).then(function (res) {
-            console.log(res)
-          })*/
+          }).catch(err => {
+            console.log(err)
+          })
         }
       }
     }
@@ -136,6 +181,13 @@
     height: 100%;
     overflow-y: auto;
     background-color: #F5FAF5;
+  }
+
+  .spinner {
+    vertical-align: middle;
+    display: inline-block;
+    position: relative;
+    margin-top: -3px;
   }
 
   .ui-cell {

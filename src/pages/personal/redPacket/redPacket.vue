@@ -4,15 +4,8 @@
       <router-link to="personal" slot="left">
         <i class="font_tuina icon-back"></i>
       </router-link>
-      <div slot="right" class="selectList">
-        <span @click="getTime">{{label}}年 <i class="font_tuina icon-arrow-down"></i></span>
-        <div :class="{'show':isShow}" class="liText">
-          <ul>
-            <li class="bgk" v-for="(item,$index) in options" :value="item.value" :label="item.label"
-                @click="getValue(options,$index)">{{item.label}}
-            </li>
-          </ul>
-        </div>
+      <div slot="right" class="selectList" @click="getValue">
+        <span>{{label}}年 <i class="font_tuina icon-arrow-down"></i></span>
       </div>
     </header-Top>
     <div class="redPacket">
@@ -20,110 +13,152 @@
         <span>共收到红包（元）</span>
       </div>
       <div class="totalMoney">
-        <span>{{totalMoney}}</span>
+        <span>{{TipsAmount}}</span>
       </div>
     </div>
-    <div class="list">
+    <div class="list" v-show="redPacketList">
       <ui-loadmore
         :pageSize="pageSize"
         :topMethod="loadTop"
         :bottomMethod="loadBottom"
         ref="loadmore" style="height:100%">
         <div class="moneyList clearfix" v-for="(item,idx) in moneyList" :key="idx" slot="item">
-          <div class="moneyListCon">
-            <p>{{item.userTel}}</p>
-            <p class="moneyListTim">
-              <span>{{item.date}}</span>
-              <span>{{item.time}}</span>
-            </p>
-          </div>
-          <div class="money">{{item.money}}元</div>
+          <div class="moneyListCon">{{item.CreateTime}}</div>
+          <div class="money">{{item.Amount}}元</div>
         </div>
-        <div slot="nomore" class="text-center">没有更多</div>
       </ui-loadmore>
-      <!--<div class="empty">-->
-      <!--<img src="../../../assets/img/iv_recharge_kong.png" alt="">-->
-      <!--<p>暂无红包记录</p>-->
-      <!--</div>-->
     </div>
-
+    <ui-Empty v-show="!redPacketList" text="暂无红包记录"></ui-Empty>
+    <div :class="{'show':close}">
+      <mt-popup
+        v-model="showpopup"
+        :closeOnClickModal='false'
+        position="bottom">
+        <div class="popBtn">
+          <span class="cancel" @click="cancel">取消</span>
+          <span class="confirm" @click="confirm">确定</span>
+        </div>
+        <mt-picker :slots="slots" @change="onValuesChange"></mt-picker>
+      </mt-popup>
+    </div>
   </div>
 </template>
 
 <script>
   import headerTop from '../../../components/head/header'
   import uiLoadmore from '../../../components/uiLoadmore/uiLoadmore'
+  import uiEmpty from '../../../components/empty/empty'
+
 
   export default {
     components: {
       headerTop,
-      uiLoadmore
+      uiLoadmore,
+      uiEmpty
     },
     data() {
       return {
         pageSize: 15,
-        totalMoney: '1314.00',
-        isShow: true,
-        label: '2018',
-        options: [
-          {label: '2018', value: '1'},
-          {label: '2017', value: '2'},
-          {label: '2016', value: '3'},
+        TipsAmount: null,
+        close: true,
+        showpopup: false,
+        label: null,
+        // date: null,
+        redPacketList: true,
+        slots: [
+          {
+            selected: 0,
+            values: [],
+          },
         ],
+
         moneyList: [
-          {userTel: '122222222', date: '2018-02-08', time: '21:12:00', money: '233'},
-          {userTel: '122222222', date: '2018-02-08', time: '21:12:00', money: '233'},
-          {userTel: '122222222', date: '2018-02-08', time: '21:12:00', money: '233'},
-          {userTel: '122222222', date: '2018-02-08', time: '21:12:00', money: '233'},
-          {userTel: '122222222', date: '2018-02-08', time: '21:12:00', money: '233'},
-          {userTel: '122222222', date: '2018-02-08', time: '21:12:00', money: '233'},
-          {userTel: '122222222', date: '2018-02-08', time: '21:12:00', money: '233'},
-          {userTel: '122222222', date: '2018-02-08', time: '21:12:00', money: '233'},
-          {userTel: '122222222', date: '2018-02-08', time: '21:12:00', money: '233'},
-          {userTel: '122222222', date: '2018-02-08', time: '21:12:00', money: '233'},
+          // {CreateTime: '2018-02-08 21:12:00', Amount: '233'},
+          // {CreateTime: '2018-02-08 21:12:00', Amount: '233'},
+          // {CreateTime: '2018-02-08 21:12:00', Amount: '233'},
+
         ]
       }
     },
+    created() {
+      let date = new Date().getFullYear()
+      let time = Number(this.$route.query.CreateTime)
+      while (time <= date) {
+        this.slots[0].values.unshift(time++);
+      }
+      if(this.slots[0].values.length == 0){
+        this.slots[0].values[0] = new Date().getFullYear()
+      }
+      this.label = this.slots[0].values[0];
+      this.getRedPacketWeeks();
+    },
     methods: {
-      getTime() {
-        this.isShow = false;
-      },
-      getValue(options, $index) {
-        for (let i = 0; i < options.length; i++) {
-          this.index = $index;
-          if (this.index == i) {
-            this.label = this.options[i].label;
+      // 获取数据
+      getRedPacketWeeks() {
+        let req = new this.RequestObject({
+          PageIndex: 1,
+          PageSize: 15,
+        })
+        this.$http.post(this.state.BaseData.origin + "/508", req.reqData).then((res) => {
+          req.handleException(res.data)
+          console.log(res.data)
+          this.TipsAmount = res.data.Result.TipsAmount.toFixed(2);
+          // if (this.TipsAmount == 0.00 || "") {
+          //   this.redPacketList = false;
+          // }
+          for (let i = 0; i < res.data.Result.ResponseTechTips.length; i++) {
+            res.data.Result.ResponseTechTips[i].CreateTime = this.util.formatDate(new Date(res.data.Result.ResponseTechTips[i].CreateTime), "yyyy/MM/dd  hh:mm:ss")
+            res.data.Result.ResponseTechTips[i].Amount = res.data.Result.ResponseTechTips[i].Amount.toFixed(2);
           }
+          this.moneyList = res.data.Result.ResponseTechTips
+        })
+      },
+      // 弹窗显示隐藏
+      cancel() {
+        this.close = true;
+      },
+      confirm() {
+        this.label = this.slots[0].selected;
+        this.close = true;
+      },
+      getValue() {
+        this.close = false;
+        this.showpopup = true
+      },
+      onValuesChange(picker, values) {
+        this.slots[0].selected = values[0];
+        if (values[0] > values[1]) {
+          picker.setSlotValue(1, values[0]);
         }
-        this.isShow = true;
       },
       loadTop() {
         // 加载更多数据
         setTimeout(() => {
-          this.moneyList = [];
-          for (let i = 0; i < this.pageSize.length; i++) {
-            this.moneyList.push({userTel: '122222222', date: '2018-02-08', time: '21:12:00', money: '233'})
-            console.log(this.moneyList);
-          }
+          this.PageIndex = 1;
+          this.getRedPacketWeeks();
           this.$refs.loadmore.onAllLoadChange(false);// 若数据已全部获取完毕
           this.$refs.loadmore.onTopLoaded();
         }, 1000)
       },
       loadBottom() {
         // 加载更多数据
+        // let _this = this;
         setTimeout(() => {
-          if (this.moneyList.length > 40) {
-            this.$refs.loadmore.onAllLoadChange(true);
-          } else {
-            let arr = []
-            for (let i = 0; i < this.pageSize; i++) {
-              arr.push({userTel: '122222222', date: '2018-02-08', time: '21:12:00', money: '233'})
-            }
-            this.moneyList = this.moneyList.concat(...arr)
-            //若当前页数据少于 每页数量则 没有更多数据
-            this.$refs.loadmore.onAllLoadChange(arr.length < this.pageSize ? true : false);
-          }
+          // if (this.moneyList.length > this.pageSize) {
+          //   this.$refs.loadmore.onAllLoadChange(true);
+          // } else {
 
+          let arr = []
+          for (let i = 0; i < this.PageSize; i++) {
+            arr.push(this.moneyList[i])
+          }
+          this.moneyList = this.moneyList.concat(...arr)
+
+          // 若当前页数据少于 每页数量则 没有更多数据
+          let flag = this.moneyList.length < this.pageSize ? true : false
+          this.$refs.loadmore.onAllLoadChange(flag);
+
+          // }
           this.$refs.loadmore.onBottomLoaded();
         }, 500)
       }
@@ -163,42 +198,24 @@
       bottom: 0;
       top: 6rem;
       width: 100%;
+
       .moneyList {
         margin: 0.2rem 0.3rem 0.3rem;
-        padding: 0.42rem 0.45rem;
+        padding: 0.45rem 0.45rem;
         font-size: 0.16rem;
         background-color: #fff;
         border-radius: 0.1rem;
+        z-index: 100;
         .moneyListCon {
           float: left;
-          p:nth-child(1) {
-            font-size: 0.24rem;
-            color: $txtColorPrimary;
-          }
-          .moneyListTim {
-            color: $txtColor;
-            font-size: 0.28rem;
-            padding-top: 0.1rem;
-          }
+          color: $txtColor;
+          font-size: 0.28rem;
+          padding-top: 0.1rem;
         }
         .money {
           float: right;
-          padding-top: 0.15rem;
           font-size: 0.36rem;
           color: #FF6050;
-        }
-      }
-      .empty {
-        margin: 1.1rem 0 0 2.4rem;
-        text-align: center;
-        img {
-          width: 2.64rem;
-          height: 2.4rem;
-        }
-        p {
-          font-size: 0.28rem;
-          color: $txtColorLight;
-          padding-top: 0.45rem;
         }
       }
     }
@@ -209,27 +226,29 @@
         color: #fff;
         font-size: 0.3rem;
       }
-      .show {
-        display: none;
-      }
-      .liText {
-        color: #fff;
-        font-size: 0.3rem;
-        position: relative;
-        ul {
-          position: absolute;
-          top: 0;
-          left: 0;
-
-          li {
-            padding: 0.1rem 0.3rem;
-            background: #FF6050;
-
-          }
-
-        }
-      }
     }
+    .empty {
+      transform: translate(-50%, 30%);
+    }
+  }
+
+  /*选择年限弹窗样式*/
+  .popBtn {
+    display: flex;
+    flex-direction: row;
+    border-bottom: solid 1px #eaeaea;
+    .cancel, .confirm {
+      display: inline-block;
+      width: 50%;
+      text-align: center;
+      line-height: 40px;
+      font-size: 16px;
+      color: #26a2ff;
+    }
+  }
+
+  .show {
+    display: none;
   }
 
 

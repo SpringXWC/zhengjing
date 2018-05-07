@@ -20,9 +20,9 @@
             :bottomMethod="loadBottom"
             ref="loadmore" style="height:100%">
             <div slot="item" v-for="list in item.items" class="clearfix">
-              <span>{{list.telNum}}</span>
-              <span class="service">我服务过 <i>{{list.Num}} </i>次</span>
-              <i class="font_tuina icon-collect" :class="{'isActive':list.active}"></i>
+              <span>{{list.Userid}}</span>
+              <span class="service">我服务过 <i>{{list.Num}}</i>次</span>
+              <i class="font_tuina icon-collect" :class="{'isActive':list.CollectFlag}"></i>
             </div>
           </ui-loadmore>
         </mt-tab-container-item>
@@ -43,57 +43,97 @@
     data() {
       return {
         selected: 'client',
-        active: true,
-        tabs: [
-          {id: 'client', tabMenu: '我的客户', tabNum: '1374'},
-          {id: 'collect', tabMenu: '收藏我', tabNum: '43'},
-          {id: 'cancel', tabMenu: '取消收藏', tabNum: '3'},
-        ],
+
+        // active: true,
+        tabs: [],
         ids: [
           {
             id: 'client',
             allLoaded: false,
-            pageSize: 15,
+            // pageSize: 15,
             items: [
-              {telNum: "13222222222", Num: '3333', active: true},
-              {telNum: "13222222222", Num: '3333'},
-              {telNum: "13222222222", Num: '3333'},
-              {telNum: "13222222222", Num: '3333'},
-              {telNum: "13222222222", Num: '3333'},
+              {Userid: "13266831599", Num: '3333', CollectFlag: false},
+              {Userid: "13266831599", Num: '3333', CollectFlag: false},
+              {Userid: "13266831599", Num: '3333', CollectFlag: false},
+              {Userid: "13266831599", Num: '3333', CollectFlag: false},
+              {Userid: "13266831599", Num: '3333', CollectFlag: false},
+              {Userid: "13266831599", Num: '3333', CollectFlag: false},
+              {Userid: "13266831599", Num: '3333', CollectFlag: false},
+              // {telNum: "13222222222", Num: '3333'},
+              // {telNum: "13222222222", Num: '3333'},
+              // {telNum: "13222222222", Num: '3333'},
+              // {telNum: "13222222222", Num: '3333'},
             ]
           },
           {
             id: 'collect',
             allLoaded: false,
-            pageSize: 15,
+            // pageSize: 15,
             items: [
-              {telNum: "13222222222", Num: '33'},
-              {telNum: "13222222222", Num: '33'},
-              {telNum: "13222222222", Num: '33'},
-              {telNum: "13222222222", Num: '33'},
-              {telNum: "13222222222", Num: '33'},
+              {Userid: "132668315997777", Num: '333355', CollectFlag: false},
+              {Userid: "13266831599", Num: '3333', CollectFlag: false},
+              {Userid: "13266831599", Num: '3333', CollectFlag: false},
+              {Userid: "13266831599", Num: '3333', CollectFlag: false},
+              {Userid: "13266831599", Num: '3333', CollectFlag: false},
+              {Userid: "13266831599", Num: '3333', CollectFlag: false},
+              {Userid: "13266831599", Num: '3333', CollectFlag: false},
+              // {telNum: "13222222222", Num: '33'},
+              // {telNum: "13222222222", Num: '33'},
+              // {telNum: "13222222222", Num: '33'},
+              // {telNum: "13222222222", Num: '33'},
+              // {telNum: "13222222222", Num: '33'},
             ],
           },
           {
             id: 'cancel',
             allLoaded: false,
-            pageSize: 15,
+            // pageSize: 15,
             items: [
-              {telNum: "13222222222", Num: '3'},
-              {telNum: "13222222222", Num: '3'},
-              {telNum: "13222222222", Num: '2'},
-              {telNum: "13222222222", Num: '4'},
-              {telNum: "13222222222", Num: '1'},
-              {telNum: "13222222222", Num: '6'},
-              {telNum: "13222222222", Num: '8'},
-              {telNum: "13222222222", Num: '4'},
+              {Userid: "13266831599000", Num: '3333222', CollectFlag: false},
+              {Userid: "13266831599", Num: '3333', CollectFlag: false},
+              {Userid: "13266831599", Num: '3333', CollectFlag: false},
+              {Userid: "13266831599", Num: '3333', CollectFlag: false},
+              {Userid: "13266831599", Num: '3333', CollectFlag: false},
+              {Userid: "13266831599", Num: '3333', CollectFlag: false},
+              {Userid: "13266831599", Num: '3333', CollectFlag: false},
+              // {telNum: "13222222222", Num: '3'},
+              // {telNum: "13222222222", Num: '3'},
+              // {telNum: "13222222222", Num: '2'},
+              // {telNum: "13222222222", Num: '4'},
+              // {telNum: "13222222222", Num: '1'},
+              // {telNum: "13222222222", Num: '6'},
+              // {telNum: "13222222222", Num: '8'},
+              // {telNum: "13222222222", Num: '4'},
             ],
           },
         ],
 
       }
     },
+    mounted(){
+
+    },
+    created() {
+      this.getClientWeeks();
+    },
     methods: {
+      // 请求数据
+        getClientWeeks() {
+        let req = new this.RequestObject({
+          PageIndex:1,
+          PageSize:15,
+          type:2
+        })
+        this.$http.post(this.state.BaseData.origin + "/507", req.reqData).then((res) => {
+          req.handleException(res.data)
+          console.log(res.data)
+          this.tabs = [
+            {id: 'client', tabMenu: '我的客户', tabNum: res.data.Result.MyClient},
+            {id: 'collect', tabMenu: '收藏我', tabNum: res.data.Result.CollectCount},
+            {id: 'cancel', tabMenu: '取消收藏', tabNum: res.data.Result.NoCollectCount}
+          ]
+        })
+      },
       currentTabIdx() {
         let i = 0
         switch (this.selected) {
@@ -116,7 +156,7 @@
         setTimeout(() => {
           let arr = []
           for (let idx = 0; idx < 15; idx++) {
-            arr.push({telNum: "13222222222", Num: parseInt(Math.random() * 10)})
+            // arr.push({telNum: "13222222222", Num: parseInt(Math.random() * 10)})
           }
           list.items = arr
           this.$refs.loadmore[i].onAllLoadChange(false);// 若数据已全部获取完毕
@@ -131,7 +171,7 @@
         setTimeout(() => {
           let arr = []
           for (let idx = 0; idx < 15; idx++) {
-            arr.push({telNum: "13222222222", Num: parseInt(Math.random() * 10)})
+            // arr.push({telNum: "13222222222", Num: parseInt(Math.random() * 10)})
           }
           list.items = list.items.concat(...arr)
           if (list.items.length > 30) {
@@ -152,11 +192,11 @@
   .mint-navbar {
     padding-top: 0.25rem;
     background-color: #F5FAF5;
-
   }
 
   .mint-navbar .mint-tab-item {
     color: $txtColor;
+    /*-webkit-tap-highlight-color: rgba(0,0,0,0);*/
   }
 
   .mint-navbar .mint-tab-item.is-selected {
@@ -165,11 +205,13 @@
     border-bottom: 0;
     padding-bottom: 0.65rem;
     border-radius: 0.1rem;
+
   }
 
   .tabNum {
     padding-bottom: 0.36rem;
-    font-size: 0.3rem;
+    font-size: 0.36rem;
+    font-weight: bold;
   }
 
   .tabMenu {

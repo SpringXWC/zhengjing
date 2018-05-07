@@ -4,7 +4,7 @@
       <router-link to="/remind" slot="right">
         <div>
           <i class="icon font_tuina icon-message"></i>
-          <div class="icons">8</div>
+          <div class="icons" v-if="indexState>0" >{{indexState}}</div>
         </div>
       </router-link>
     </header-Top>
@@ -26,20 +26,20 @@
         </tr>
         <tr class="calendar-three">
           <td v-for="(val ,idx) in dayList" v-if="idx<7" @click="pushto(idx,val)" :class="{active:selectIndex==idx,
-          lastselect:lastselect==val.date,noselect:noselect>val.date}"><span>{{val.date}}</span><span
+          lastselect:lastselect==val.date,noselect:noselect>idx}"><span>{{val.date}}</span><span
             class="today">今</span>
           </td>
         </tr>
-        <tr class="calendar-three" style="padding-bottom: 0.2rem">
+        <tr class="calendar-three">
           <td v-for="(val ,idx) in dayList" v-if="idx>=7" @click="pushto(idx,val)" :class="{active:selectIndex==idx,
-          lastselect:lastselect==val.date}">{{val.date}}
+          lastselect:lastselect==val.date,noselect:noselect>idx}"><span>{{val.date}}</span><span class="today">今</span>
           </td>
         </tr>
       </table>
     </div>
 
     <ui-loadmore :pageSize="pageSize"
-                 :bottomMethod="loadBottom"
+                 :bottomMethod="loadBottom":topMethod="loadTop"
                  ref="loadmore" class="loadmore">
       <div class="order" slot="item">
         <ul>
@@ -63,7 +63,6 @@
 <script>
   import headerTop from '../../components/head/header'
   import UiLoadmore from "../../components/uiLoadmore/uiLoadmore";
-
   export default {
     components: {
       UiLoadmore,
@@ -71,7 +70,9 @@
     },
     data() {
       return {
-        pageSize: 5,
+        pageSize: 12,
+        PageIndex: 1,
+        Date: '',
         datalist: [
           {datetime: "15:30-16:30", address: "南山海雅酒店", state: "服务中"},
           {datetime: "15:30-16:30", address: "南山海雅酒店", state: "已预约"},
@@ -83,16 +84,20 @@
           {datetime: "15:30-16:30", address: "南山海雅酒店", state: "已完成"},
           {datetime: "15:30-16:30", address: "南山海雅酒店", state: "已完成"}
         ],
+        datalistQQ: [],//原数组 PageIndex=1;
+        datalistPP: [],//定义空数组，接收PageIndex>1请求过来的数据
         dayList: [],
         daylist: [],
-        selectIndex: '20',
+        selectIndex: 20,
         lastselect: '',
         noselect: '',
         mapselect: '已完成',
         setselect: '服务中',
         getselect: '已预约',
-        firstindex: "0",
-        lastindex: ''
+        firstindex: 0,
+        lastindex: '',
+        todayIndex:'',
+        indexState:0
       }
     },
     computed: {
@@ -118,29 +123,93 @@
           let day = {
             day: time,
             date: setatime
-
-
           }
-
           this.dayList.push(day);
         }
+        for(let i=0;i<this.dayList.length;i++){
+             if(this.dayList[i].date==today.getDate()){
+               this.todayIndex=i
+               this.noselect=i
+             }
+        }
+        console.log(this.noselect)
         this.lastselect = today.getDate();
-        this.noselect = today.getDate();
         this.lastindex = this.datalist.length - 1;
       },
       pushto(idx, val) {
         this.selectIndex = idx;
-        this.lastselect = ''
+        this.lastselect = '';
         if (val.date == new Date().getDate()) {
           this.lastselect = new Date().getDate()
         }
+        if(idx>=this.todayIndex){
+           if(val.date-new Date().getDate()<0){
+             if((new Date().getMonth()+1)==12){
+               this.Date = (new Date().getFullYear()+1) + '/' + (new Date().getMonth()-10) + '/' + val.date
+             }else{
+               this.Date = new Date().getFullYear() + '/' + (new Date().getMonth() + 2) + '/' + val.date
+             }
+           }else{
+             this.Date = new Date().getFullYear() + '/' + (new Date().getMonth() + 1) + '/' + val.date
+           }
+        }else{
+           if(val.date-new Date().getDate()>0){
+             if((new Date().getMonth()+1)==1){
+               this.Date = (new Date().getFullYear()-1) + '/' + (new Date().getMonth()+12) + '/' + val.date
+             }else{
+               this.Date = new Date().getFullYear() + '/' + (new Date().getMonth() ) + '/' + val.date
+             }
+           }else{
+             this.Date = new Date().getFullYear() + '/' + (new Date().getMonth() + 1) + '/' + val.date
+           }
+        }
+        console.log(this.Date)
+        this. getHttpRequest()
+      },
+      loadTop() {
+        // 加载更多数据
+        // setTimeout(() => {
+        //   this.PageIndex=1;
+        //   this.getHttpRequest();
+        //   this.$refs.loadmore.onAllLoadChange(false);// 若数据已全部获取完毕
+        //   this.$refs.loadmore.onTopLoaded();
+        // }, 1000)
       },
       loadBottom() {
         // 加载更多数据
-        setTimeout(() => {
-
-          this.$refs.loadmore.onBottomLoaded();
-        }, 500)
+        // setTimeout(() => {
+        //   this.PageIndex++;//上拉一次 ,PageIndex增加一页
+        //   console.log(this.PageIndex)
+        //   this.getHttpRequest()
+        //
+        //   let arr=this.datalistPP
+        //   // this.datalistQQ = this.datalistQQ.concat(...arr)//将获取的当前页的数组拼接到原数组里
+        //   if (this.datalistQQ.length/this.PageIndex<= 12) {
+        //     this.$refs.loadmore.onAllLoadChange(true);// 若数据已全部获取完毕
+        //   }
+        //    this.$refs.loadmore.onBottomLoaded();
+        //  }, 500)
+      },
+      //数据调用
+      getHttpRequest() {
+        let obj = {
+          Query: {
+            ChoseDate: new Date(this.Date).valueOf(),
+            PageIndex: this.PageIndex,
+            PageSize: this.pageSize
+          },
+          "BaseData": {
+            "IP": this.state.BaseData.IP,
+            "OS": this.state.BaseData.OS,
+            "Sign": "",
+            "Token": this.state.BaseData.Token
+          }
+        }
+        obj.BaseData.Sign = this.md5(this.util.paramComputeMD5(obj, this.state.BaseData.secret))
+        this.$http.post(this.state.BaseData.origin + "/500", obj).then((res) => {
+          console.log(res.data)
+          this.datalistPP = res.data
+        })
       }
 
     },
@@ -156,7 +225,33 @@
 
       }
       this.daylist.push(day)
+    },
+    //页面加载完后，获取当天的订单数据
+    mounted() {
+
+      this.Date = new Date().getFullYear() + '/' + (new Date().getMonth() + 1) + '/' + new Date().getDate()
+      console.log(this.Date)
+      let obj = {
+        Query: {
+          ChoseDate: new Date(this.Date).valueOf(),
+          PageIndex: this.PageIndex,
+          PageSize: this.pageSize
+        },
+        "BaseData": {
+          "IP": this.state.BaseData.IP,
+          "OS": this.state.BaseData.OS,
+          "Sign": "",
+          "Token": this.state.BaseData.Token
+        }
+      }
+      obj.BaseData.Sign = this.md5(this.util.paramComputeMD5(obj, this.state.BaseData.secret))
+      this.$http.post(this.state.BaseData.origin + "/500", obj).then((res) => {
+        console.log(res.data)
+        this.datalistQQ = res.data
+      })
+
     }
+
   }
 </script>
 
@@ -185,36 +280,25 @@
   .today {
     display: none;
     font-size: 0.01rem;
-
     position: absolute;
-    bottom: -0.26rem;
+    bottom:0.07rem;
     right: 0.38rem;
     color: white;
   }
 
   .calendar-one {
-    font-family: PingFang-SC-Medium;
     font-size: 0.28rem;
     text-align: center;
     color: #203736;
   }
-
   table {
-    width: 6.86rem;
-    height: 3.93rem;
-    display: flex;
-    flex-direction: column;
     margin-left: 0.32rem;
     tr {
-      flex: 1;
-      display: flex;
-      flex-direction: row;
       td {
-        flex: 1;
+        width: 0.98rem;
+        height: 0.98rem;
         text-align: center;
-        line-height: 0.88rem;
         position: relative;
-
       }
     }
   }
@@ -232,6 +316,7 @@
   .calendar-three {
     font-size: 0.3rem;
     color: #83C582;
+
   }
 
   .loadmore {
@@ -239,7 +324,7 @@
     position: fixed;
     overflow: auto;
     background: #F5FAF5;
-    top: 5.03rem;
+    top: 5.15rem;
     bottom: 1.18rem;
 
   }

@@ -4,11 +4,11 @@
   <div class="ui-page">
     <header-top title="排班休假"></header-top>
     <div class="pg-btns groove-padd-md">
-      <router-link to="/scheduleApply" class="btn">
+      <div @click="toScheduleApply" class="btn">
         <mt-button type="primary" size="large">
           <i class="icon font_tuina icon-schedule"></i>&ensp;排班申请
         </mt-button>
-      </router-link>
+      </div>
       <router-link to="holiday" class="btn">
         <mt-button type="primary" size="large">
           <i class="icon font_tuina icon-holiday"></i>&ensp;休假申请
@@ -16,50 +16,68 @@
       </router-link>
     </div>
     <div class="groove-padd-md">
-
       <div class="list-block ui-clip">
         <img src="./clip.png" class="clip" width="28" alt="">
         <ul class="nav-process groove-marg-md">
-          <li class="list-item">
-            <div class="text-primary">
-              <span class="list-point text-primary"></span>
-              <div class="ui-title">
+          <li class="list-item" v-for="(item,idx) in weeks">
+            <div :class="{'text-primary':idx==0}">
+              <span class="list-point" :class="{'text-primary':idx==0}"></span>
+              <div class="ui-title" v-if="idx == 0">
                 本周排班
               </div>
-              <p class="text-primary">2016/03/03 - 2016/03/09</p>
-              <p class="text-primary">晚班 10:00 - 22:00</p>
-            </div>
-          </li>
-          <li class="list-item">
-            <div>
-              <span class="list-point"></span>
-              <div class="ui-title">第二周排班</div>
-              <p class="text-minor">2016/03/03 - 2016/03/09</p>
-              <p class="text-minor">晚班 10:00 - 22:00</p>
-            </div>
-          </li>
-          <li class="list-item">
-            <div>
-              <span class="list-point"></span>
-              <div class="ui-title">第二周排班</div>
-              <p class="text-minor">
-                2016/03/03 - 2016/03/09
-                <span class="fr text-warn">等待审核</span>
+              <div class="ui-title" v-else>
+                第{{textNum[idx+1]}}周排班
+              </div>
+              <p :class="{'text-minor':item.WorkType == -1}">
+                {{item.WorkDate1 | date("yyyy/MM/dd")}} -
+                {{item.WorkDate2 | date("yyyy/MM/dd")}}
+                <span class="fr text-warn" v-if="item.WorkType == -1">等待审核</span>
+              </p>
+              <p v-if="item.WorkType != -1">
+                {{dateRules[item.WorkType].DateTypeName}}
+                {{dateRules[item.WorkType].DateTypeBegin | date("hh:mm")}} -
+                {{dateRules[item.WorkType].DateTypeEnd | date("hh:mm")}}
               </p>
             </div>
           </li>
         </ul>
       </div>
-      <div class="list-block">
+      <div class="list-block" v-if="hasScheduling">
         <ul class="nav-process groove-marg-md">
-          <li class="list-item">
+          <li class="list-item" v-for="(item ,idx) in record" v-if="item.ApplyType == 1">
             <div>
               <span class="list-point"></span>
               <div class="ui-title">
-                我的申请
+                排班申请
               </div>
-              <p class="text-minor">2018/03/01 10:00 - 2018/03/04 22:00</p>
-              <p class="text-primary">已通过</p>
+              <p class="text-minor">
+                {{item.Being | date('yyyy/MM/dd')}} -
+                {{item.End | date('yyyy/MM/dd')}}
+              </p>
+              <p class="text-minor">
+                {{dateRules[item.WorkType].DateTypeName}}
+                {{dateRules[item.WorkType].DateTypeBegin | date("hh:mm")}} -
+                {{dateRules[item.WorkType].DateTypeEnd | date("hh:mm")}}
+              </p>
+              <p class="text-primary">{{item.IsApprove | auditStatus}}</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="list-block" v-if="hasVacation">
+        <ul class="nav-process groove-marg-md">
+          <li class="list-item" v-for="(item ,idx) in record" v-if="item.ApplyType == 2">
+            <div>
+              <span class="list-point"></span>
+              <div class="ui-title">
+                休假申请
+              </div>
+              <p class="text-minor">
+                {{item.Being | date('yyyy/MM/dd hh:mm')}} -
+                {{item.End | date('yyyy/MM/dd hh:mm')}}
+              </p>
+              <p class="text-primary">{{item.IsApprove | auditStatus}}</p>
             </div>
           </li>
         </ul>
@@ -70,15 +88,112 @@
 
 <script>
   import headerTop from '@/components/head/header'
+  import {formatDate} from "../../assets/base";
 
   export default {
     components: {
       headerTop
     },
     data() {
-      return {}
+      return {
+        weeks: [],
+        textNum: ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九"],
+        //休假记录
+        record: [],
+        //是否有休假申请记录
+        hasVacation: false,
+        //是否有排班申请记录
+        hasScheduling: false,
+        //
+        dateRules: []
+      }
     },
-    methods: {}
+    filters: {
+      date(time, str) {
+        return time ? formatDate(new Date(time), str) : ''
+      },
+      auditStatus(val) {
+        let str = ""
+        switch (val) {
+          case 0:
+            str = '待审核';
+            break;
+          case 1:
+            str = '已通过';
+            break;
+          case 2:
+            str = '未通过';
+            break;
+          default:
+            str = ""
+        }
+        return str
+      }
+    },
+    methods: {
+      getArrangeWeeks() {
+        let req = new this.RequestObject()
+        //获取排班类型
+        this.$http.post(this.state.BaseData.origin + "/505", req.reqData).then((res) => {
+          this.dateRules = res.data.Result
+
+          //获取最近的周排班
+          this.$http.post(this.state.BaseData.origin + "/502", req.reqData).then((res) => {
+            req.handleException(res.data)
+            let week3 = {}
+            if (res.data.Basis.Status == 200) {
+              let data = res.data.Result
+              this.weeks = data
+              this.weeks.push({
+                "WorkDate": this.weeks[this.weeks.length - 1].WorkDate + 3600 * 1000 * 24 * 7,
+                "WorkType": -1
+              })
+              this.weeks.forEach((val, i, arr) => {
+                arr[i].WorkDate1 = val.WorkDate - 3600 * 1000 * 24 * 8
+                arr[i].WorkDate2 = val.WorkDate - 3600 * 1000 * 24 * 2
+              })
+            }
+
+            /*            this.weeks = [{
+                          "CreateTime": 1524807765890,
+                          "ID": 7,
+                          "WorkDate": 1524931200000,
+                          "WorkerID": 6,
+                          "WorkType": 1
+                        }, {
+                          "CreateTime": 1524807765890,
+                          "ID": 14, "WorkDate": 1525536000000, "WorkerID": 6, "WorkType": 0
+                        }]*/
+
+          })
+
+          //获取 最近的排班,休假申请
+          this.$http.post(this.state.BaseData.origin + "/511", req.reqData).then((res) => {
+            req.handleException(res.data)
+            let data = res.data
+            if (data.Basis.Status == 200) {
+              this.record = data.Result
+              this.hasScheduling = this.record.some(val => val.ApplyType == 1)
+              this.hasVacation = this.record.some(val => val.ApplyType == 2)
+            }
+          })
+        })
+      },
+      toScheduleApply() {
+        if (!this.weeks.length) {
+          return
+        }
+        this.$router.push({
+          path: '/scheduleApply',
+          query: {
+            startTime: this.weeks[this.weeks.length - 1].WorkDate1
+          }
+        })
+      }
+    },
+    created() {
+      this.getArrangeWeeks()
+    }
   }
 </script>
 

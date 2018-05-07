@@ -87,7 +87,7 @@ function formatDate(date, fmt) {
     let flag = new RegExp(`(${k})`).test(fmt)
     if (flag) {
       if (RegExp.$1.indexOf('D') !== -1) {
-        fmt = fmt.replace(RegExp.$1, (RegExp.$1.length === 3) ? week[Number(str)] :(RegExp.$1.length === 2)? weekzh[Number(str)]: str)
+        fmt = fmt.replace(RegExp.$1, (RegExp.$1.length === 3) ? week[Number(str)] : (RegExp.$1.length === 2) ? weekzh[Number(str)] : str)
       } else {
         fmt = fmt.replace(RegExp.$1, (RegExp.$1.length === 1) ? str : str.padStart(2, '0'))
       }
@@ -129,13 +129,52 @@ let nativeIt = {
         window.JSInterface.loginOut()
       } catch (err) {
         //错误
-        alert(err)
+        console.log(err)
       }
     }
+    cookie.del("OS")
+    cookie.del("IP")
+    cookie.del("Token")
   }
 }
 
+/**
+ * @description obj排序的函数
+ * @param obj
+ * @return {string}
+ */
+function objKeySort(obj) {
+  let newkey = Object.keys(obj).sort();
+  //先用Object内置类的keys方法获取要排序对象的属性名，再利用Array原型上的sort方法对获取的属性名进行排序，newkey是一个数组
+  let newObj = {};
+  let str = ""
+  for (let i = 0; i < newkey.length; i++) {//遍历newkey数组
+    newObj[newkey[i]] = obj[newkey[i]];//向新创建的对象中按照排好的顺序依次增加键值对
+  }
+  return newObj;//返回排好序的新对象
+}
 
-var util = {urlParse, cookie, formatDate, nativeIt, OSTYPE}
-export {urlParse, cookie, formatDate, nativeIt, OSTYPE}
+/**
+ * @description query参数key(全小写)值排序 => 取所有key对应的 value (value之间用 ^ 分割)
+ * @param obj {Object} 请求参数
+ * @param str {string} 秘钥
+ * @return {String} 返回需要加密的字符串
+ */
+function paramComputeMD5(obj, str) {
+  let data = {}
+  for (let key in obj.Query) {
+    data[key.toLowerCase()] = obj.Query[key]
+  }
+  data = objKeySort(data)
+  let keys = Object.keys(data)
+  let paramStr = ''
+  for (let i = 0; i < keys.length; i++) {
+    paramStr += data[keys[i]] + (i < keys.length - 1 ? '^' : '')
+  }
+  paramStr += str
+  return paramStr
+}
+
+var util = {urlParse, cookie, formatDate, nativeIt, OSTYPE, paramComputeMD5}
+export {urlParse, cookie, formatDate, nativeIt, OSTYPE, paramComputeMD5}
 export default util

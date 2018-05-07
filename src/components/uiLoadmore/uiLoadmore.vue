@@ -13,9 +13,7 @@
         <span>{{topStatus === 'drop'?'释放更新':topStatus === 'loading'?'':'下拉刷新'}}</span>
       </div>
       <div class="list">
-
         <slot name="item"></slot>
-
         <div v-show="allLoaded">
           <slot name="nomore">
             <div slot="nomore" class="text-center">没有更多</div>
@@ -95,9 +93,9 @@
       transform: rotate(180deg);
     }
   }
-</style>
-<style lang="scss">
   .mint-loadmore .mint-spinner-triple-bounce > div {
     background-color: #7BC57A !important;
   }
+
 </style>
+

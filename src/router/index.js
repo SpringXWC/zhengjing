@@ -22,7 +22,6 @@ import orderItem from '../pages/order/orderItem'
 import remind from '../pages/schedule/remind'
 
 
-
 Vue.use(Router)
 
 export default new Router({
@@ -30,16 +29,16 @@ export default new Router({
     {
       path: '/',
       component: index,
-      children:[
-        {path:'/',redirect: 'schedule'},
-        {path:'/schedule',component: schedule},
-        {path:'/order',component: order},
-        {path:'/arrange',component: arrange},
-        {path:'/personal',component: personal},
+      children: [
+        {path: '/', redirect: 'schedule'},
+        {path: '/schedule', component: schedule},
+        {path: '/order', component: order},
+        {path: '/arrange', component: arrange},
+        {path: '/personal', component: personal},
       ]
     },
     {path:'/holiday',component: holiday},
-    {path:'/scheduleApply',component: scheduleApply},
+    {path: '/scheduleApply', component: scheduleApply},
     {path:'/client',component: client},
     {path:'/evaluate',component: evaluate},
     {path:'/statement',component: statement},

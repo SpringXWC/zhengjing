@@ -5,7 +5,7 @@
         <i class="font_tuina icon-back"></i>
       </router-link>
     </header-Top>
-    <div class="statement" v-for="item in statements">
+    <div class="statement" v-for="item in statements" v-show="statementList">
       <div class="statementHead clearfix">
         <span>{{item.statementName}}</span>
         <span>{{item.statementNum}}位技师中排名</span>
@@ -46,19 +46,22 @@
         </table>
       </div>
     </div>
+    <ui-Empty v-show="!statementList" text="暂无报表记录"></ui-Empty>
   </div>
 </template>
 
 <script>
   import headerTop from '../../../components/head/header'
+  import uiEmpty from '../../../components/empty/empty'
 
   export default {
     components: {
-      headerTop
+      headerTop,
+      uiEmpty
     },
     data() {
       return {
-
+        statementList:true,
         statements: [
           {
             statementName: '收藏报表',
@@ -186,8 +189,9 @@
     .statement {
       margin: 0.2rem 0.3rem 0.2rem 0.3rem;
       padding-bottom: 0.5rem;
-      border-radius: 0.2rem;
+      border-radius: 0.1rem;
       background-color: #fff;
+      border:0.01rem solid #EFEFEF;
 
       .statementHead {
         border-bottom: 1px dashed #EFEFEF;
@@ -213,6 +217,7 @@
           color: $txtColorLight;
           font-size: 0.24rem;
           float: right;
+          padding-top: 0.05rem;
         }
       }
       h2 {
@@ -224,15 +229,20 @@
       }
       .statementCon {
         padding: 0 0.5rem;
+
+
         table {
+          border-radius:0.1rem;
+          overflow:hidden;
           width: 100%;
           color: $txtColorLight;
           font-size: 0.28rem;
           border: 0.01rem solid #EFEFEF;
           border-collapse: collapse;
           tr {
+
             td {
-              border: 0.01rem solid #EFEFEF;
+              border-bottom: 0.01rem solid #EFEFEF;
               text-align: center;
               &:nth-child(1) {
                 width: 2.35rem;
@@ -240,9 +250,24 @@
                 padding-left: 0.3rem;
                 text-align: left;
                 color: $txtColor;
+                /*border-top-left-radius:0.1rem;*/
+              }
+              /*td:first-child,*/
+              /*td:nth-child(2),*/
+              /*td:nth-child(3),*/
+              /*td:last-child{!*设置table表格每列底部边框*!*/
+                /*!*border-bottom: 2px solid #eaeaea;*!*/
+
+              /*}*/
+
+            }
+            &:last-child{
+              td ,th{
+                border-bottom:none;
               }
             }
             &:nth-child(1) {
+
               color: $txtColor;
             }
 

@@ -60,6 +60,7 @@
 <style scoped lang="scss">
   .settings {
     background-color: #fff;
+    height: 100%;
     overflow: auto;
     .setting {
       .settingTop {
@@ -124,14 +125,18 @@
         }
       }
       .exitSpan {
+        position: relative;
+        bottom:0.3rem;
+        height: 1.1rem;
+        line-height: 1.1rem;
+        width: 92%;
+        margin:0 0.3rem;
         text-align: center;
-        margin:0 0.3rem ;
         background-color: #EDF6EC;
         border-radius: 0.05rem;
-        padding:0.37rem 2.5rem;
         color: $txtColorPrimary;
         font-size: 0.4rem;
       }
-    }
+      }
   }
 </style>

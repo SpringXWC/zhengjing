@@ -38,6 +38,7 @@ import headerTop from '../../../../components/head/header'
       methods:{
         getBack(){
           this.$router.back(-1);
+
         }
       }
     }

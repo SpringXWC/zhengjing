@@ -7,7 +7,6 @@
 </template>
 
 <script>
-  import {cookie} from "./assets/base";
 
   export default {
     name: 'App',
@@ -16,18 +15,39 @@
         transitionName: 'slide-right'
       }
     },
+    created() {
+      let cookie = this.util.cookie
+      //OS ios APP == 2  android APP == 3
+      let osType = this.$route.query.OS || cookie.get('OS')
+      if (osType) {
+        cookie.set('OS', osType)
+        this.state.BaseData.OS = osType
+      }
+      //token
+      let token = this.$route.query.Token || cookie.get('Token')
+      if (token) {
+        cookie.set('Token', token)
+        this.state.BaseData.Token = token
+      }
+      //ip
+      let ip = cookie.get('IP') || "127.0.0.1"
+      if (ip) {
+        cookie.set('IP', ip)
+        this.state.BaseData.IP = ip
+      }
+
+      // 私钥
+      this.state.BaseData.secret = '9ol.)P:?3edc$RFV5tgb'
+
+    },
     watch: {
       '$route'(to, from) {
         this.transitionName = APP.isBack ? 'slide-right' : 'slide-left';
         APP.isBack = false
       }
     },
-    mounted() {
-      //OS ios APP == 2  android APP == 3
-      let osType = this.$route.query.OS
-      if (osType) {
-        cookie.set('OS', osType)
-      }
+    mounted: function () {
+
     }
   }
 </script>

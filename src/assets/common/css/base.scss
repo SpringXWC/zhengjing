@@ -3,10 +3,10 @@
  * Created by fwxing on 2018/3/20 9:49
  */
 //mintui按钮样式更改（退出账户）
-.mint-msgbox-confirm{
-  color:#83C582 !important;
-
+.mint-msgbox-confirm {
+  color: #83C582 !important;
 }
+
 /*公共样式*/
 html {
   -webkit-text-size-adjust: none;
@@ -48,6 +48,7 @@ li {
 
 a {
   text-decoration: none;
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
 }
 
 body {
@@ -55,24 +56,17 @@ body {
 }
 
 //字体颜色
-.text-default {
-  color: $txtColor;
+$text-color: (default, $txtColor), (primary, $mainColor), (minor, $txtColorLight), (warn, $txtWarn);
+@each $mode, $c in $text-color {
+  .text-#{$mode} {
+    color: $c;
+  }
 }
 
-.text-primary {
-  color: $mainColor;
-}
-
-.text-minor {
-  color: $txtColorLight;
-}
-
-.text-warn {
-  color: $txtWarn;
-}
-.font_tuina{
+.font_tuina {
   font-size: inherit;
 }
+
 //文本对齐
 $txtDir: left, center, right;
 @each $dir in $txtDir {
@@ -113,4 +107,19 @@ $size-list: (lg, 40px), (md, 30px), (sm, 20px), (xs, 10px);
   .picker-selected {
     font-size: .3rem;
   }
+}
+
+//mintui picker样式
+.picker-items {
+  position: relative;
+  bottom: 0;
+}
+
+.mint-popup-bottom {
+  width: 100%
+}
+//下拉加载提示文字
+
+.text-center {
+  font-size: 0.24rem;
 }

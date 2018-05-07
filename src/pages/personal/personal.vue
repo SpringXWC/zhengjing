@@ -11,34 +11,35 @@
       <div class="personal">
         <div class="personalTop clearfix">
           <div class="userImg">
-            <img :src="imgUrl" alt="" >
+            <img :src="ImgUrl" alt="" >
           </div>
           <div class="message">
-            <p class="userName">{{userName}}</p>
-            <p class="money">￥{{money}} / 分钟</p>
-            <p class="skill">擅长：推拿、足疗、艾灸、刮痧、拔罐</p>
-            <p class="grade">评价：{{gradeNum}}分  {{amount}}单</p>
+            <p class="userName">{{Name}}</p>
+            <p class="money">￥{{UnitPrice}} / 分钟</p>
+            <p class="skill">擅长：{{ServeFlag}}</p>
+            <p class="grade">
+              <span>评价：{{Score}}分</span>
+              <span>{{OrderCount}}单</span>
+            </p>
           </div>
         </div>
       </div>
-        <div class="personalBot">
-          <router-link to="income">
-            <span>本月收入：</span>
-            <span>￥{{incomeMoney}}</span>
-            <span> / </span>
-            <span>{{currentAmount}}单</span>
-            <i class="font_tuina icon-arrow-right"></i>
-          </router-link>
-        </div>
+      <div class="personalBot" @click="goIncome(MonthIncome,MonthCount)">
+          <span>本月订单收入：</span>
+          <span>￥{{MonthIncome}}</span>
+          <span> / </span>
+          <span>{{MonthCount}}单</span>
+          <i class="font_tuina icon-arrow-right"></i>
+      </div>
       <div class="listTitle">
-        <router-link v-for="(list,idx) in lists" :to="list.routerName" :key="idx">
-          <personal-List :listTitle="list.title">
+        <router-link v-for="(list,idx) in lists" :to="list.routerName == 'redPacket'?list.routerName+'?CreateTime='+CreateTime : list.routerName" :key="idx">
+          <personal-List :listTitle="list.title" >
             <i class="font_tuina icon-arrow-right" slot="rightBtn"></i>
           </personal-List>
         </router-link>
       </div>
     </div>
-    <!--<redpacket-Pop></redpacket-Pop>-->
+    <redpacket-Pop :v-show="redpacketPopShow"></redpacket-Pop>
   </div>
 
 </template>
@@ -54,21 +55,61 @@
           redpacketPop
         },
       data(){
-          return{
-            imgUrl:require('../../assets/images/userImg.png'),
-            userName:'李大帅',
-            money:'2.5',
-            gradeNum:'4.9',
-            amount:'6441',
-            incomeMoney:'57823.32',
-            currentAmount:'113',
-            lists:[
-              {routerName:'client',title:'我的客户'},
-              {routerName:'evaluate',title:'我的评价'},
-              {routerName:'statement',title:'我的报表'},
-              {routerName:'redPacket',title:'我获得的红包'},
-            ]
-          }
+        return{
+          redpacketPopShow:true,
+          ImgUrl:null,
+          Name:null,
+          ServeFlag:null,
+          UnitPrice:null,
+          Score:null,
+          OrderCount:null,
+          MonthIncome:null,
+          MonthCount:null,
+          CreateTime:null,
+          lists:[
+            {routerName:'client',title:'我的客户'},
+            {routerName:'evaluate',title:'我的评价'},
+            {routerName:'statement',title:'我的报表'},
+            {routerName:'redPacket',title:'我获得的红包'},
+          ]
+        }
+      },
+      mounted() {
+      },
+      methods:{
+          // 获取数据
+        getPersonalWeeks() {
+          let req = new this.RequestObject()
+          this.$http.post(this.state.BaseData.origin + "/506", req.reqData).then((res) => {
+            req.handleException(res.data)
+            console.log(res.data)
+            this.ImgUrl = res.data.Result.ImgUrl == "" ? require('../../assets/img/iv_default.png'):res.data.Result.ImgUrl;
+            this.Name = res.data.Result.Name;
+            this.UnitPrice = res.data.Result.UnitPrice;
+            // this.ServeFlag = res.data.Result.ServeFlag;
+            res.data.Result.ServeFlag ='我的客户我的客户我的客户我的客户我的客户我的客户我的客户我的客户我的客户我的客户我的客户';
+            this.ServeFlag = res.data.Result.ServeFlag;
+            this.Score = res.data.Result.Score;
+            this.OrderCount = res.data.Result.OrderCount;
+            this.MonthIncome = res.data.Result.MonthIncome.toFixed(2);
+            this.MonthCount = res.data.Result.MonthCount;
+            this.CreateTime = this.util.formatDate(new Date(res.data.Result.CreateTime),"yyyy")
+          })
+        },
+        //将本月订单收入两个参数传入incom页面
+        goIncome(MonthIncome,MonthCount) {
+          this.$router.push({
+            path:"/income",
+            query:{
+              MonthIncome:MonthIncome,
+              MonthCount: MonthCount
+            }
+          })
+        },
+
+      },
+      created() {
+          this.getPersonalWeeks();
       }
     }
 </script>
@@ -82,14 +123,14 @@
     overflow: auto;
     .icon-setting{
       color:$txtColorPrimary;
-      font-size:0.4rem;
+      font-size:0.45rem;
     }
   .personalCon{
      padding:0.3rem 0.3rem 0;
     .personal{
       line-height: 1em;
-      border-top-left-radius:0.2rem;
-      border-top-right-radius:0.2rem;
+      border-top-left-radius: 0.1rem;
+      border-top-right-radius: 0.1rem;
       background-color:$mainColor;
       .personalTop{
         padding-bottom: 0.5rem;
@@ -101,7 +142,9 @@
             width: 100%;
             height: 100%;
             border-radius:50%;
-            margin:0.65rem 0 0 0.3rem;
+            margin:0.42rem 0 0 0.3rem;
+            box-sizing: border-box;
+            border: 0.04rem solid #fff;
           }
         }
         .message{
@@ -116,7 +159,7 @@
           .money{
             color:#fff;
             font-size:0.28rem;
-            padding-top: 0.3rem;
+            padding-top: 0.4rem;
             span{
               color:#fff;
               font-size:0.28rem;
@@ -126,6 +169,9 @@
             color:#fff;
             font-size:0.24rem;
             padding-top: 0.3rem;
+            span:nth-child(1){
+              padding-right:0.2rem;
+            }
           }
           .skill{
             text-overflow: ellipsis;
@@ -134,6 +180,7 @@
             color:#fff;
             font-size:0.24rem;
             padding-top:0.3rem;
+            padding-right: 0.2rem;
           }
         }
       }
@@ -142,10 +189,10 @@
       height: 1rem;
       line-height: 1rem;
       background-color:#EDF6EC;
-      border-bottom-left-radius:0.2rem;
-      border-bottom-right-radius:0.2rem;
+      border-bottom-left-radius:0.1rem;
+      border-bottom-right-radius:0.1rem;
       padding:0 0.3rem;
-      box-shadow:0 0.08rem #DEECDE;
+      box-shadow: 0rem 0.16rem 0.24rem 0rem rgba(76, 150, 75, 0.12);
       span{
         color:$txtColorPrimary;
         font-size: 0.28rem;
@@ -163,7 +210,6 @@
         color:#DCDCDD;
         font-size:0.22rem ;
         position:absolute;
-        top:0.05rem;
         right:0.3rem;
       }
     }

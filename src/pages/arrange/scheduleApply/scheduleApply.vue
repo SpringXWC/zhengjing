@@ -1,6 +1,6 @@
 <template>
   <div class="ui-page">
-    <header-top title="休假申请">
+    <header-top title="排班申请">
       <router-link to="arrange" slot="left">
         <i class="icon font_tuina icon-back"></i>
       </router-link>
@@ -16,15 +16,20 @@
         </div>
       </div>
     </div>
-    <div>
+    <div v-if="rules.length">
       <div class="ui-cell groove-padd-md" :class="{'text-minor': item.disabled}" v-for="(item,idx) in rules"
-           @click="toggleSelect(item,idx)">
-        <span>{{item.time}}</span>
-        <i class="icon font_tuina icon-tick text-primary" v-if="idx === selectRule"></i>
+           @click="toggleSelect(item)">
+        <div>
+          <span>{{ item.DateTypeName }}</span>：
+          <span>{{new Date(item.DateTypeBegin) | time}}</span> -
+          <span>{{new Date(item.DateTypeEnd) | time}}</span>
+        </div>
+        <i class="icon font_tuina icon-tick text-primary" v-if="item.ID === selectRule"></i>
       </div>
     </div>
     <div class="groove-padd-md fixed-bottom">
-      <mt-button type="primary" class="ui-btn-success" size="large" @click.native="submit">
+      <mt-button type="primary" class="ui-btn-success" :disabled="loading" size="large" @click.native="submit">
+        <mt-spinner v-show="loading" :type="3" :size="24" color="#fff" class="spinner"></mt-spinner>
         提交申请
       </mt-button>
     </div>
@@ -48,34 +53,28 @@
         endTime: null,
         visible1: false,
         visible2: false,
-        calender: [
-          {value: new Date('2018/4/9')},
-          {value: new Date('2018/4/10')},
-          {value: new Date('2018/4/11')},
-          {value: new Date('2018/4/12')},
-          {value: new Date('2018/4/13')},
-          {value: new Date('2018/4/14')},
-          {value: new Date('2018/4/15')},
-        ],
-        selectRule: 0,
+        calender: [],
+        selectRule: null,
+        //提交loading
+        loading: false,
         rules: [
-          {
-            time: '早班：10:00 - 22:00',
-            disabled: false,
-          }, {
-            time: '晚班：10:00 - 22:00',
-            disabled: true,
-          }, {
-            time: '通班：10:00 - 22:00',
-            disabled: false,
-          }
+          /*          {
+                    ID: 2,
+                    DateTypeBegin: new Date(),
+                    DateTypeEnd: new Date(),
+                    DateTypeName: '早班'
+                  },{
+                    ID: 3,
+                    DateTypeBegin: new Date(),
+                    DateTypeEnd: new Date(),
+                    DateTypeName: '早班'
+                  }*/
         ]
       }
-
     },
     filters: {
-      dateTime(val) {
-        return val ? formatDate(val, 'yyyy年MM月dd日 hh:mm') : ''
+      time(val) {
+        return val ? formatDate(val, 'hh:mm') : ''
       },
       dateWeek(val) {
         return val ? formatDate(val, 'DD') : ''
@@ -84,38 +83,66 @@
         return val ? formatDate(val, 'dd') : ''
       }
     },
+    created() {
+      this.getArrangeList()
+      //第三周日期数据
+      let startTime = this.$route.query.startTime - 0
+      startTime = startTime ? new Date(startTime) : new Date()
+      for (var i = 0; i < 7; i++) {
+        let time = new Date(new Date(startTime.valueOf()).setDate(startTime.getDate() + i))
+        let obj = {
+          value: time,
+        }
+        this.calender.push(obj)
+      }
+    },
+
     methods: {
       //切换选择
-      toggleSelect(val, idx) {
-        if(val.disabled){
+      toggleSelect(val) {
+        if (val.disabled) {
           return
         }
-        this.selectRule = idx
-      },
-      //验证
-      validate() {
-        if (!this.startTime) {
-          Toast({
-            message: '请选择时间',
-            position: 'center',
-            duration: 3000
-          });
-          return false
-        }
-        return true
+        this.selectRule = val.ID
       },
       //提交申请
       submit() {
-        if (this.validate()) {
-          /*this.$http.post('/', {
-            params: {
-              time1: this.startTime,
-              time2: this.endTime
-            }
-          }).then(function (res) {
-            console.log(res)
-          })*/
+        if (this.selectRule == undefined) {
+          Toast({
+            message: '请选择时段',
+            position: 'center',
+            duration: 3000
+          });
+          return
         }
+        let req = new this.RequestObject({
+          begin: this.calender[0].value.valueOf(),
+          end: this.calender[this.calender.length - 1].value.valueOf(),
+          DateType: this.selectRule
+        })
+        this.loading = true
+        this.$http.post(this.state.BaseData.origin + "/503", req.reqData).then((res) => {
+          req.handleException(res.data)
+          this.loading = false
+          if (res.data.Basis.Status === 200) {
+            Toast({
+              message: res.data.Basis.Msg,
+              position: 'center',
+              duration: 2000
+            });
+            setTimeout(() => {
+              this.$router.go(-1)
+            }, 3000)
+          }
+        })
+
+      },
+      //获取排班时间数据
+      getArrangeList() {
+        let request = new this.RequestObject()
+        this.$http.post(this.state.BaseData.origin + "/505", request.reqData).then((res) => {
+          this.rules = res.data.Result
+        })
       }
     }
   }
@@ -127,6 +154,13 @@
     height: 100%;
     overflow-y: auto;
     background-color: #F5FAF5;
+  }
+
+  .spinner {
+    vertical-align: middle;
+    display: inline-block;
+    position: relative;
+    margin-top: -3px;
   }
 
   .ui-cell {

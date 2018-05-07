@@ -23,18 +23,15 @@
     line-height: 1rem;
     margin-bottom:0.2rem;
     background-color:#fff;
+    border-radius: 0.1rem;
 
     .listTitle{
-      /*float:left;*/
+
       position: absolute;
-      left:0.2rem;
+      left:0.3rem;
       color:$txtColor;
       font-size:0.3rem;
     }
-    /*.is-right{*/
-      /*!*float:right;*!*/
-      /*position: absolute;*/
-      /*right:0.3rem;*/
-    /*}*/
+
   }
 </style>
